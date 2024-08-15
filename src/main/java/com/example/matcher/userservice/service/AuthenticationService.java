@@ -4,13 +4,8 @@ import com.example.matcher.userservice.dto.UserDTO;
 import com.example.matcher.userservice.exception.InvalidCredentialsException;
 import com.example.matcher.userservice.exception.UserAlreadyExistException;
 import com.example.matcher.userservice.model.JwtAuthenticationResponse;
-import com.example.matcher.userservice.model.Role;
-import com.example.matcher.userservice.model.TokenConfirmationEmail;
 import com.example.matcher.userservice.model.User;
-import com.example.matcher.userservice.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
