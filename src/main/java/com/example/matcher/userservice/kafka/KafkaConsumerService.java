@@ -17,6 +17,7 @@ public class KafkaConsumerService {
     @AspectAnnotation
     @KafkaListener(topics = "delete_profile", groupId = "${spring.kafka.consumer.group-id}")
     public void listenDeleteProfile(String userId) {
+        System.out.println("Received JSON message: " + userId);
         userRepository.deleteById(UUID.fromString(userId));
     }
 }

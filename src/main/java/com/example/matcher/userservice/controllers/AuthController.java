@@ -27,9 +27,12 @@ public class AuthController {
         authenticationService.sendTokenConfirmationEmail(email);
         return new ResponseEntity<>("Check email", HttpStatus.OK);
     }
-
     @PostMapping("/register")
-    public ResponseEntity<JwtAuthenticationResponse> registerUser(@RequestBody UserDTO userDTO, @RequestParam("token") String token){
-        return new ResponseEntity<>(authenticationService.signUp(userDTO, token), HttpStatus.CREATED);
+    public ResponseEntity<JwtAuthenticationResponse> registerUser(@RequestBody UserDTO userDTO){
+        return new ResponseEntity<>(authenticationService.registration(userDTO), HttpStatus.CREATED);
     }
+//    @PostMapping("/register")
+//    public ResponseEntity<JwtAuthenticationResponse> registerUser(@RequestBody UserDTO userDTO, @RequestParam("token") String token){
+//        return new ResponseEntity<>(authenticationService.signUp(userDTO, token), HttpStatus.CREATED);
+//    }
 }

@@ -27,6 +27,10 @@ public class AuthenticationService {
         var jwt = jwtService.generateToken(userService.registerUser(userDTO));
         return new JwtAuthenticationResponse(jwt);
     }
+    public JwtAuthenticationResponse registration(UserDTO userDTO) {
+        var jwt = jwtService.generateToken(userService.registerUser(userDTO));
+        return new JwtAuthenticationResponse(jwt);
+    }
 
     public JwtAuthenticationResponse signIn(UserDTO userDTO) {
         User user = userService.getByEmail(userDTO.getEmail());
