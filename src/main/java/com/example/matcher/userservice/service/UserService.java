@@ -29,7 +29,7 @@ public class UserService {
         }
         User user = new User();
         user.setEmail(userDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+//        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         user.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         user.setRole(Role.ROLE_USER);
@@ -38,7 +38,7 @@ public class UserService {
     }
 
     public User passwordChange(User user, String newPassword) {
-        user.setPassword(passwordEncoder.encode(newPassword));
+//        user.setPassword(passwordEncoder.encode(newPassword));
         user.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         userRepository.save(user);
         return user;

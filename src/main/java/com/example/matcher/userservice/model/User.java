@@ -26,9 +26,6 @@ public class User implements UserDetails {
     private String email;
 
     @Column(nullable = false)
-    private String password;
-
-    @Column(nullable = false)
     private Timestamp createdAt;
 
     @Column(nullable = false)
@@ -44,7 +41,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return password;
+        return null;
     }
 
     @Override
