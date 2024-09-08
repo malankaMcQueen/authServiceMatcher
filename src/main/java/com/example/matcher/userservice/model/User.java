@@ -16,8 +16,7 @@ import java.util.UUID;
 @Data
 @Entity
 @Table(name = "users")
-//@Builder
-public class User implements UserDetails {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
@@ -28,44 +27,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Timestamp createdAt;
 
-    @Column(nullable = false)
-    private Timestamp updatedAt;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
-    }
 
-    @Override
-    public String getPassword() {
-        return null;
-    }
-
-    @Override
-    public String getUsername() {
-        return id.toString();
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
 }

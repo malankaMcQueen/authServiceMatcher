@@ -1,6 +1,7 @@
 package com.example.matcher.userservice.service;
 
 import com.example.matcher.userservice.configuration.SecurityConfiguration;
+import com.example.matcher.userservice.dto.UserDTO;
 import com.example.matcher.userservice.model.User;
 import com.example.matcher.userservice.repository.UserRepository;
 //import io.jsonwebtoken.io.IOException;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
     private final UserRepository userRepository;
+    private final UserService userService;
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     @Override
@@ -34,18 +36,20 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     ) throws IOException {
         if (auth instanceof OAuth2AuthenticationToken auth2AuthenticationToken) {
             var principal = auth2AuthenticationToken.getPrincipal();
-            var username = principal.getName();
             String userEmail = principal.getAttribute("email"); // Email пользователя
-
-            logger.info("Username: " + userEmail);
-
+            User user = userService.getByEmail(userEmail);
+            if (user == null) {
+                UserDTO userDTO = new UserDTO();
+                userDTO.setEmail(userEmail);
+                user = userService.registerUser(userDTO);
+                logger.info("Create new user: " + user);
+            }
+            logger.info("User auth: " + user);
         }
         else {
-            logger.info("I --------");
-
+            logger.error("SOMETHING ERROR IN SUCCESS HANDLER");
         }
-
         super.clearAuthenticationAttributes(request);
-//        super.getRedirectStrategy().sendRedirect(request, response, "/api/v1/user/me");
+        super.getRedirectStrategy().sendRedirect(request, response, "/UserService/auth/google");
     }
 }

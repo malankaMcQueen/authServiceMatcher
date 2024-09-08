@@ -39,17 +39,4 @@ public class UserController {
         User user = userService.getUserById(UUID.fromString(userId)); // Вызов сервиса для получения пользователя
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
-
-//    @GetMapping
-//    public ResponseEntity<User> getById(){
-//
-//        User users = userService.getUserById(uuid);
-//        return new ResponseEntity<>(users, HttpStatus.OK);
-//    }
-
-    // addNewUser
-    // GetAllUsers
-    // CheckExsistUser
-    // messageRecoveryPassword
-
 }

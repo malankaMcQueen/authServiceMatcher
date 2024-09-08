@@ -102,7 +102,7 @@ public class SecurityConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http
-/*    , OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler*/) throws Exception {
+    , OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
@@ -121,8 +121,8 @@ public class SecurityConfiguration {
                         .anyRequest().permitAll())
                 .oauth2Login(oauth2Login -> oauth2Login
                         .failureUrl("/login?error")
-//                        .successHandler(oAuth2AuthenticationSuccessHandler)
-                        .defaultSuccessUrl("/UserService/v1/auth/google", true)  // URL после успешного входа
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+//                        .defaultSuccessUrl("/UserService/auth/google", true)  // URL после успешного входа
                         );
         return http.build();
     }

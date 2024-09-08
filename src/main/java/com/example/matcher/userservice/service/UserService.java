@@ -2,7 +2,6 @@ package com.example.matcher.userservice.service;
 
 
 import com.example.matcher.userservice.dto.UserDTO;
-import com.example.matcher.userservice.exception.EmailNotFoundException;
 import com.example.matcher.userservice.exception.ResourceNotFoundException;
 import com.example.matcher.userservice.exception.UserAlreadyExistException;
 import com.example.matcher.userservice.model.Role;
@@ -15,23 +14,20 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @AllArgsConstructor
 public class UserService {
     private UserRepository userRepository;
-    private PasswordEncoder passwordEncoder;
+
     public User registerUser(UserDTO userDTO) {
         if (userRepository.existsByEmail(userDTO.getEmail())) {
             throw new UserAlreadyExistException("User with this email already exists");
         }
         User user = new User();
         user.setEmail(userDTO.getEmail());
-//        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        user.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         user.setRole(Role.ROLE_USER);
         userRepository.save(user);
         return user;
@@ -39,7 +35,6 @@ public class UserService {
 
     public User passwordChange(User user, String newPassword) {
 //        user.setPassword(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         userRepository.save(user);
         return user;
     }

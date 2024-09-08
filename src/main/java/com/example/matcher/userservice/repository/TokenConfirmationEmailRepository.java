@@ -14,4 +14,6 @@ public interface TokenConfirmationEmailRepository extends JpaRepository<TokenCon
     Optional<TokenConfirmationEmail> findByToken(String token);
 
     void deleteByToken(String token);
+
+    void deleteByEmail(String email);
 }
