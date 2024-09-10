@@ -3,11 +3,14 @@ package com.example.matcher.userservice.controllers;
 import com.example.matcher.userservice.configuration.SecurityConfiguration;
 import com.example.matcher.userservice.exception.ResourceNotFoundException;
 import com.example.matcher.userservice.model.JwtAuthenticationResponse;
+import com.example.matcher.userservice.model.RefreshToken;
 import com.example.matcher.userservice.model.TokenConfirmationEmail;
 import com.example.matcher.userservice.model.User;
+import com.example.matcher.userservice.repository.RefreshTokenRepository;
 import com.example.matcher.userservice.repository.TokenConfirmationEmailRepository;
 import com.example.matcher.userservice.service.AuthenticationService;
 import com.example.matcher.userservice.service.JwtService;
+import com.example.matcher.userservice.service.UserService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,26 +25,31 @@ import java.util.List;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/UserService/auth")
-//@RequestMapping("/login/oauth2/code")
 public class AuthController {
 
     private AuthenticationService authenticationService;
     private JwtService jwtService;
-    private TokenConfirmationEmailRepository token;
+    private RefreshTokenRepository refreshTokenRepository;
+    private UserService userService;
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
-    @GetMapping("/token")
-    public List<TokenConfirmationEmail> validateToken() {
-        return token.findAll();
+    @GetMapping("/refreshToken")
+    public ResponseEntity<JwtAuthenticationResponse> refreshToken(@RequestParam("refreshToken") String refreshToken) {
+        return new ResponseEntity<>(jwtService.refreshToken(refreshToken), HttpStatus.OK);
+    }
+    @GetMapping("/refreshToken/getAll")
+    public ResponseEntity<List<RefreshToken>> refreshToken() {
+        return new ResponseEntity<>(refreshTokenRepository.findAll(), HttpStatus.OK);
     }
 
     @GetMapping("/google")
     public ResponseEntity<JwtAuthenticationResponse> loginWithGoogle(@AuthenticationPrincipal OAuth2User oauth2User) {
         if (oauth2User != null) {
             String userEmail = oauth2User.getAttribute("email"); // Email пользователя
-            User user = new User();
-            user.setEmail(userEmail);
+            User user = userService.getByEmail(userEmail);
+
+            logger.info("Email: " + user.getEmail());
             return new ResponseEntity<>(new JwtAuthenticationResponse(jwtService.generateAccessToken(user), jwtService.generateRefreshToken(user)), HttpStatus.OK);
         } else {
             throw new ResourceNotFoundException("Error");
@@ -66,8 +74,4 @@ public class AuthController {
         return new ResponseEntity<>("Check email", HttpStatus.OK);
     }
 
-//    @PostMapping("/register")
-//    public ResponseEntity<JwtAuthenticationResponse> registerUser(@RequestBody UserDTO userDTO, @RequestParam("token") String token){
-//        return new ResponseEntity<>(authenticationService.signUp(userDTO, token), HttpStatus.CREATED);
-//    }
 }

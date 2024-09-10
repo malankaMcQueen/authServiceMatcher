@@ -18,40 +18,11 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class AuthenticationService {
 
-    private final PasswordEncoder passwordEncoder;
     private final UserService userService;
     private final JwtService jwtService;
     private final TokenConfirmationEmailService tokenConfirmationEmailService;
     private final EmailService emailService;
 
-//    public JwtAuthenticationResponse signUp(UserDTO userDTO, String token) {
-//        if (!tokenConfirmationEmailService.isValidToken(token)) {
-//            throw new InvalidCredentialsException("Invalid token");
-//        }
-//        tokenConfirmationEmailService.deleteToken(token);
-////        var jwt = jwtService.generateToken(userService.registerUser(userDTO));
-//        JwtAuthenticationResponse jwt = new JwtAuthenticationResponse();
-//        jwt.setAccessToken("dsadsasd");
-//        return jwt;
-//    }
-//    public JwtAuthenticationResponse registration(UserDTO userDTO) {
-////        var jwt = jwtService.generateToken(userService.registerUser(userDTO));
-//        JwtAuthenticationResponse jwt = new JwtAuthenticationResponse();
-//        jwt.setAccessToken("dsadsasd");
-//        return jwt;
-//    }
-//
-//    public JwtAuthenticationResponse signIn(UserDTO userDTO) {
-//        User user = userService.getByEmail(userDTO.getEmail());
-//        System.out.println(user);
-////        if (user == null || !passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
-////            throw new InvalidCredentialsException("Invalid email or password");
-////        }
-////        var jwt = jwtService.generateToken(user);
-//        JwtAuthenticationResponse jwt = new JwtAuthenticationResponse();
-//        jwt.setAccessToken("dsadsasd");
-//        return jwt;
-//    }
     public void sendEmailRegistrationToken(String email){
         if (userService.getByEmail(email) != null) {
             throw new UserAlreadyExistException("User with this email already exists");

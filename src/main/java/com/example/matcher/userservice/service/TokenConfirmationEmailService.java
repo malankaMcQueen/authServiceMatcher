@@ -31,7 +31,7 @@ public class TokenConfirmationEmailService {
     @Scheduled(fixedRate = 3600000) // Запуск задачи каждые 60 минут (3600000 мс)
     @Transactional
     public void cleanUpExpiredTokens() {
-        logger.warn("StartCLeanToken");
+        logger.info("StartCLeanToken");
         tokenConfirmationEmailRepository.deleteByExpiryDateBefore(LocalDateTime.now());
     }
 

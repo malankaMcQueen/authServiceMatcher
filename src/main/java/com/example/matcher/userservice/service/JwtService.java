@@ -1,5 +1,8 @@
 package com.example.matcher.userservice.service;
 
+import com.example.matcher.userservice.exception.InvalidCredentialsException;
+import com.example.matcher.userservice.model.JwtAuthenticationResponse;
+import com.example.matcher.userservice.model.RefreshToken;
 import com.example.matcher.userservice.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -7,6 +10,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,28 +21,28 @@ import java.security.Key;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 
 @Slf4j
 @Component
 //@AllArgsConstructor
-//@Service
 public class JwtService {
 
-//    @Value("${jwt.secret.access}")
+    //    @Value("${jwt.secret.access}")
     @Value("${jwt.secret.access}")
     private String jwtAccessSecret;
 
 
     @Value("${jwt.secret.refresh}")
     private String jwtRefreshSecret;
-    
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
     public String generateAccessToken(@NonNull User user) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
@@ -50,22 +54,26 @@ public class JwtService {
     }
 
     public String generateRefreshToken(@NonNull User user) {
-        final LocalDateTime now = LocalDateTime.now();
-        final Instant refreshExpirationInstant = now.plusDays(30).atZone(ZoneId.systemDefault()).toInstant();
-        final Date refreshExpiration = Date.from(refreshExpirationInstant);
-        return Jwts.builder()
+
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUser(user);
+        refreshToken.setToken(Jwts.builder()
                 .setSubject(user.getEmail())
                 .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
                 .signWith(getSecretKey(jwtRefreshSecret))
-                .compact();
+                .compact());
+        refreshTokenService.deleteTokenByUser(user);
+        refreshTokenService.saveToken(refreshToken);
+        return refreshToken.getToken();
     }
 
     public boolean validateAccessToken(@NonNull String accessToken) {
-        return validateToken(accessToken,getSecretKey(jwtAccessSecret));
+        return validateToken(accessToken, getSecretKey(jwtAccessSecret));
     }
 
     public boolean validateRefreshToken(@NonNull String refreshToken) {
-        return validateToken(refreshToken, getSecretKey(jwtRefreshSecret));
+        return validateToken(refreshToken, getSecretKey(jwtRefreshSecret))
+                && refreshTokenService.findByToken(refreshToken).isPresent();
     }
 
     private boolean validateToken(@NonNull String token, @NonNull Key secret) {
@@ -89,6 +97,21 @@ public class JwtService {
         }
         return false;
     }
+
+    private Key getSecretKey(String jwtSecret) {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public JwtAuthenticationResponse refreshToken(String refreshToken) {
+        if (!this.validateRefreshToken(refreshToken)) {
+            throw new InvalidCredentialsException("Refresh token not valid");
+        }
+        User user = refreshTokenService.findByToken(refreshToken).orElseThrow(() ->
+                new InvalidCredentialsException("Refresh token not valid")).getUser();
+        return new JwtAuthenticationResponse(generateAccessToken(user), generateRefreshToken(user));
+    }
+}
 
 //    public Claims getAccessClaims(@NonNull String token) {
 //        return getClaims(token, getSecretKey(jwtAccessSecret));
@@ -117,12 +140,7 @@ public class JwtService {
 //        return extractExpiration(token).before(new Date());
 //    }
 
-    private Key getSecretKey(String jwtSecret) {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
 
-}
 
 //@Service
 //public class JwtService {
