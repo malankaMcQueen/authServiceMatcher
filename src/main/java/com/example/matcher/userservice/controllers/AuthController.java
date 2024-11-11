@@ -1,5 +1,6 @@
 package com.example.matcher.userservice.controllers;
 
+import com.example.matcher.userservice.aspect.AspectAnnotation;
 import com.example.matcher.userservice.configuration.SecurityConfiguration;
 import com.example.matcher.userservice.exception.ResourceNotFoundException;
 import com.example.matcher.userservice.model.JwtAuthenticationResponse;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,7 +34,7 @@ public class AuthController {
     private RefreshTokenRepository refreshTokenRepository;
     private UserService userService;
 
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @GetMapping("/refreshToken")
     public ResponseEntity<JwtAuthenticationResponse> refreshToken(@RequestParam("refreshToken") String refreshToken) {
@@ -43,8 +45,10 @@ public class AuthController {
         return new ResponseEntity<>(refreshTokenRepository.findAll(), HttpStatus.OK);
     }
 
+    @AspectAnnotation
     @GetMapping("/google")
     public ResponseEntity<JwtAuthenticationResponse> loginWithGoogle(@AuthenticationPrincipal OAuth2User oauth2User) {
+
         if (oauth2User != null) {
             String userEmail = oauth2User.getAttribute("email"); // Email пользователя
             User user = userService.getByEmail(userEmail);
@@ -57,9 +61,18 @@ public class AuthController {
     }
 
 
+//    @Transactional
+    @AspectAnnotation
     @PostMapping("/registration/email/sendToken")
     public ResponseEntity<String> sendEmailRegistrationToken(@RequestParam("email") String email) {
         authenticationService.sendEmailRegistrationToken(email);
+        return new ResponseEntity<>("Check email", HttpStatus.OK);
+    }
+
+    @AspectAnnotation
+    @PostMapping("/login/email/sendToken")
+    public ResponseEntity<String> sendEmailLoginToken(@RequestParam("email") String email) {
+        authenticationService.sendEmailLoginToken(email);
         return new ResponseEntity<>("Check email", HttpStatus.OK);
     }
 
@@ -68,10 +81,6 @@ public class AuthController {
         return new ResponseEntity<>(authenticationService.confirmationEmail(email, token), HttpStatus.OK);
     }
 
-    @PostMapping("/login/email/sendToken")
-    public ResponseEntity<String> sendEmailLoginToken(@RequestParam("email") String email) {
-        authenticationService.sendEmailLoginToken(email);
-        return new ResponseEntity<>("Check email", HttpStatus.OK);
-    }
+
 
 }

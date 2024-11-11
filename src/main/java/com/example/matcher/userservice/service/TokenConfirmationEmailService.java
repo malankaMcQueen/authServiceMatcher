@@ -42,7 +42,7 @@ public class TokenConfirmationEmailService {
         Random rnd = new Random(System.currentTimeMillis());
         String token;
         do {
-            token = Integer.toString(100000 + rnd.nextInt(999999 - 100000 + 1));      // Рандомное 6ти значное число
+            token = Integer.toString(10000 + rnd.nextInt(99999 - 10000 + 1));      // Рандомное 6ти значное число
         } while (tokenConfirmationEmailRepository.findByToken(token).isPresent());
         TokenConfirmationEmail tokenConfirmationEmail = new TokenConfirmationEmail();
         tokenConfirmationEmail.setToken(token);
@@ -55,9 +55,24 @@ public class TokenConfirmationEmailService {
 
     @AspectAnnotation
     public boolean isValidToken(String token, String email) {
+        for (TokenConfirmationEmail tokenConfirmationEmail: tokenConfirmationEmailRepository.findAll()) {
+            logger.info(tokenConfirmationEmail.getToken());
+        }
+        logger.info("All token...");
         TokenConfirmationEmail resetToken = tokenConfirmationEmailRepository.findByToken(token).orElseThrow(()
                 -> new ResourceNotFoundException("Token not found"));
-        return resetToken.getEmail().equals(email) && !resetToken.getExpiryDate().isBefore(LocalDateTime.now());
+        boolean tokenValid = false;
+        if (resetToken.getEmail().equals(email)) {
+            logger.info("Email equals");
+            if (!resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+                tokenValid = true;
+            }
+        }
+        else {
+            logger.info("BD: " + resetToken.getEmail() + " email - "+email);
+        }
+        return tokenValid;
+//        return resetToken.getEmail().equals(email) && !resetToken.getExpiryDate().isBefore(LocalDateTime.now());
     }
 
     @AspectAnnotation
