@@ -12,6 +12,11 @@ import com.example.matcher.userservice.repository.TokenConfirmationEmailReposito
 import com.example.matcher.userservice.service.AuthenticationService;
 import com.example.matcher.userservice.service.JwtService;
 import com.example.matcher.userservice.service.UserService;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,15 +41,22 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    @GetMapping("/refreshToken")
+    @Operation(summary = "Обновить токен доступа",
+            description = "Метод обновляет токен доступа и возвращает новый набор токенов")
+    @ApiResponse(responseCode = "200", description = "Успешный ответ")
+    @ApiResponse(responseCode = "401", description = "Токен не валиден", content = @Content())
+    @PostMapping("/refreshToken")
     public ResponseEntity<JwtAuthenticationResponse> refreshToken(@RequestParam("refreshToken") String refreshToken) {
         return new ResponseEntity<>(jwtService.refreshToken(refreshToken), HttpStatus.OK);
     }
+
+    @Hidden     // Hide in swagger documentation
     @GetMapping("/refreshToken/getAll")
     public ResponseEntity<List<RefreshToken>> refreshToken() {
         return new ResponseEntity<>(refreshTokenRepository.findAll(), HttpStatus.OK);
     }
 
+    @Hidden     // Hide in swagger documentation
     @AspectAnnotation
     @GetMapping("/google")
     public ResponseEntity<JwtAuthenticationResponse> loginWithGoogle(@AuthenticationPrincipal OAuth2User oauth2User) {
@@ -61,7 +73,10 @@ public class AuthController {
     }
 
 
-//    @Transactional
+    @Operation(summary = "Ввод емайла при регистрации для получения кода",
+            description = "Метод отправляет код подтверждения на указанный емайл ПРИ РЕГИСТРАЦИИ!")
+    @ApiResponse(responseCode = "200", description = "Успешный ответ", content = @Content())
+    @ApiResponse(responseCode = "409", description = "Пользователь с такой почтой уже зарегестрирован", content = @Content())
     @AspectAnnotation
     @PostMapping("/registration/email/sendToken")
     public ResponseEntity<String> sendEmailRegistrationToken(@RequestParam("email") String email) {
@@ -69,6 +84,10 @@ public class AuthController {
         return new ResponseEntity<>("Check email", HttpStatus.OK);
     }
 
+    @Operation(summary = "Ввод емайла при авторизации для получения кода",
+            description = "Метод отправляет код подтверждения на указанный емайл ПРИ АВТОРИЗАЦИИ!")
+    @ApiResponse(responseCode = "200", description = "Успешный ответ", content = @Content())
+    @ApiResponse(responseCode = "404", description = "Пользователь с такой почтой не найден", content = @Content())
     @AspectAnnotation
     @PostMapping("/login/email/sendToken")
     public ResponseEntity<String> sendEmailLoginToken(@RequestParam("email") String email) {
@@ -76,11 +95,14 @@ public class AuthController {
         return new ResponseEntity<>("Check email", HttpStatus.OK);
     }
 
+    @Operation(summary = "Ввод кода отправленного на почту",
+            description = "Метод сверяет код отправленный на почту и введённый, после чего возвращает набор токенов!")
+    @ApiResponse(responseCode = "200", description = "Успешный ответ")
+    @ApiResponse(responseCode = "401", description = "Токен не валиден", content = @Content())
     @PostMapping("/email/confirmationEmail")
     public ResponseEntity<JwtAuthenticationResponse> confirmationEmail(@RequestParam("email") String email, @RequestParam("token") String token) {
         return new ResponseEntity<>(authenticationService.confirmationEmail(email, token), HttpStatus.OK);
     }
-
 
 
 }

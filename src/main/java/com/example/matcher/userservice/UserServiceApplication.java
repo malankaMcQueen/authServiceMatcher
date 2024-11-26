@@ -21,6 +21,8 @@ public class UserServiceApplication {
 		System.setProperty("jwt.secret.refresh", dotenv.get("JWT_SECRET_REFRESH"));
 		System.setProperty("spring.security.oauth2.client.registration.google.client-id", dotenv.get("GOOGLE_CLIENT_ID"));
 		System.setProperty("spring.security.oauth2.client.registration.google.client-secret", dotenv.get("GOOGLE_CLIENT_SECRET"));
+		System.setProperty("spring.mail.username", dotenv.get("SPRING_MAIL_USERNAME"));
+		System.setProperty("spring.mail.password", dotenv.get("SPRING_MAIL_PASSWORD"));
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 

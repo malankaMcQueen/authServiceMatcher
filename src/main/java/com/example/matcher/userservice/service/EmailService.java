@@ -1,5 +1,6 @@
 package com.example.matcher.userservice.service;
 
+import com.example.matcher.userservice.aspect.AspectAnnotation;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    @AspectAnnotation
     public void sendRegistrationConfirmationEmail(String to, String token) {
         String subject = "Регистрация в Matcher";
         String message = "Пожалуйста, введите эти символы для подтверждения почты: " + token;

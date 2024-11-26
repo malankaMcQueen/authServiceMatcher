@@ -3,6 +3,7 @@ package com.example.matcher.userservice.controllers;
 
 import com.example.matcher.userservice.model.User;
 import com.example.matcher.userservice.service.UserService;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Hidden
 @RestController
 @AllArgsConstructor
 @RequestMapping("/v1/users")
