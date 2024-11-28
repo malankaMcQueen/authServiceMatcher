@@ -4,7 +4,6 @@ package com.example.matcher.userservice.service;
 import com.example.matcher.userservice.aspect.AspectAnnotation;
 
 import com.example.matcher.userservice.configuration.SecurityConfiguration;
-import com.example.matcher.userservice.exception.ResourceNotFoundException;
 import com.example.matcher.userservice.model.TokenConfirmationEmail;
 import com.example.matcher.userservice.repository.TokenConfirmationEmailRepository;
 import lombok.AllArgsConstructor;
@@ -16,8 +15,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
 
 
 @Service
@@ -37,69 +36,49 @@ public class TokenConfirmationEmailService {
 
     @AspectAnnotation
     public String createToken(String email) {
-//        String token = UUID.randomUUID().toString();
-        tokenConfirmationEmailRepository.deleteByEmail(email);
         Random rnd = new Random(System.currentTimeMillis());
         String token;
         do {
             token = Integer.toString(10000 + rnd.nextInt(99999 - 10000 + 1));      // Рандомное 6ти значное число
         } while (tokenConfirmationEmailRepository.findByToken(token).isPresent());
-        TokenConfirmationEmail tokenConfirmationEmail = new TokenConfirmationEmail();
-        tokenConfirmationEmail.setToken(token);
-        tokenConfirmationEmail.setEmail(email);
-        tokenConfirmationEmail.setExpiryDate(LocalDateTime.now().plusMinutes(60));
-        tokenConfirmationEmailRepository.save(tokenConfirmationEmail);
+        TokenConfirmationEmail existingToken = tokenConfirmationEmailRepository.findByEmail(email);
+        if (existingToken != null) {
+            existingToken.setToken(token);
+            existingToken.setExpiryDate(LocalDateTime.now().plusMinutes(60));
+            tokenConfirmationEmailRepository.save(existingToken);
+        } else {
+            TokenConfirmationEmail newToken = new TokenConfirmationEmail();
+            newToken.setToken(token);
+            newToken.setEmail(email);
+            newToken.setExpiryDate(LocalDateTime.now().plusMinutes(60));
+            tokenConfirmationEmailRepository.save(newToken);
+        }
         return token;
     }
 
 
-    @AspectAnnotation
-    public boolean isValidToken(String token, String email) {
-        for (TokenConfirmationEmail tokenConfirmationEmail: tokenConfirmationEmailRepository.findAll()) {
-            logger.info(tokenConfirmationEmail.getToken());
-        }
-        logger.info("All token...");
-        TokenConfirmationEmail resetToken = tokenConfirmationEmailRepository.findByToken(token).orElseThrow(()
-                -> new ResourceNotFoundException("Token not found"));
-        boolean tokenValid = false;
-        if (resetToken.getEmail().equals(email)) {
-            logger.info("Email equals");
-            if (!resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-                tokenValid = true;
-            }
-        }
-        else {
-            logger.info("BD: " + resetToken.getEmail() + " email - "+email);
-        }
-        return tokenValid;
+//    @AspectAnnotation
+//    public boolean isValidToken(String token, String email) {
+//        TokenConfirmationEmail resetToken = tokenConfirmationEmailRepository.findByToken(token).orElseThrow(()
+//                -> new ResourceNotFoundException("Token not found"));
 //        return resetToken.getEmail().equals(email) && !resetToken.getExpiryDate().isBefore(LocalDateTime.now());
+//    }
+
+    @Transactional
+    public boolean validateAndDeleteTokenIfPresent(String token, String email) {
+        Optional<TokenConfirmationEmail> resetToken = tokenConfirmationEmailRepository.findByToken(token);
+        if (resetToken.isEmpty() || !resetToken.get().getEmail().equals(email) || resetToken.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+            return false; // Токен недействителен
+        }
+        tokenConfirmationEmailRepository.delete(resetToken.get()); // Удаляем токен
+        return true;
     }
 
     @AspectAnnotation
-    @Transactional
     public void deleteToken(String token) {
 //        TokenConfirmationEmail tokenConfirmationEmail = tokenConfirmationEmailRepository.findByToken(token).get();
         tokenConfirmationEmailRepository.deleteByToken(token);
     }
 
-//    @AspectAnnotation
-//    public String emailConfirmation(String email) {
-//        String token = this.createToken();
-//        emailService.sendRegistrationConfirmationEmail(email, token);
-//        return "Token send on email: " + email + " Token: " + token;
-//    }
-
-//    @AspectAnnotation
-//    public String resetPassword(ResetPasswordDTO resetPasswordDTO) {
-////        User = tokenRepository.findUserByToken(resetPasswordDTO.getToken()).orElseThrow()
-////    -> new ;
-//        if (!this.isValidToken(resetPasswordDTO.getToken())){
-//            throw new InvalidCredentialsException("Invalid token");
-//        }
-//        User user = tokenRepository.findUserByToken(resetPasswordDTO.getToken()).orElseThrow(()
-//                -> new ResourceNotFoundException("User dont found"));
-//        userService.passwordChange(user, resetPasswordDTO.getPassword());
-//        return "Success";
-//    }
 
 }

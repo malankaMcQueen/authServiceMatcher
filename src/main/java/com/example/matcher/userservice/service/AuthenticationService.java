@@ -1,18 +1,14 @@
 package com.example.matcher.userservice.service;
 
+import com.example.matcher.userservice.aspect.AspectAnnotation;
 import com.example.matcher.userservice.dto.UserDTO;
-import com.example.matcher.userservice.exception.InvalidCredentialsException;
 import com.example.matcher.userservice.exception.ResourceNotFoundException;
 import com.example.matcher.userservice.exception.TokenExpiredException;
 import com.example.matcher.userservice.exception.UserAlreadyExistException;
 import com.example.matcher.userservice.model.JwtAuthenticationResponse;
 import com.example.matcher.userservice.model.User;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.sql.Timestamp;
 
 @Service
 @AllArgsConstructor
@@ -39,11 +35,11 @@ public class AuthenticationService {
         emailService.sendRegistrationConfirmationEmail(email, token);
     }
 
+    @AspectAnnotation
     public JwtAuthenticationResponse confirmationEmail(String email, String token) {
-        if (!tokenConfirmationEmailService.isValidToken(token, email)) {
+        if (!tokenConfirmationEmailService.validateAndDeleteTokenIfPresent(token, email)) {
             throw new TokenExpiredException("Invalid token");
         }
-        tokenConfirmationEmailService.deleteToken(token);
         User user = userService.getByEmail(email);
         if (user == null) {
             UserDTO userDTO = new UserDTO();
@@ -51,6 +47,5 @@ public class AuthenticationService {
             user = userService.registerUser(userDTO);
         }
         return new JwtAuthenticationResponse(jwtService.generateAccessToken(user), jwtService.generateRefreshToken(user));
-
     }
 }

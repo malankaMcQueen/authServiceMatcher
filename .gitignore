@@ -20,6 +20,10 @@ target/
 *.iws
 *.iml
 *.ipr
+.envForDocker
+Dockerfile
+authService.tar
+docker-compose.yml
 #*.md
 #*.cmd
 #*.xml
