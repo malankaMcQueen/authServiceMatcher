@@ -60,7 +60,6 @@ public class JwtService {
                 .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
                 .signWith(getSecretKey(jwtRefreshSecret))
                 .compact());
-        refreshTokenService.deleteTokenByUser(user);
         refreshTokenService.saveToken(refreshToken);
         return refreshToken.getToken();
     }
@@ -102,11 +101,12 @@ public class JwtService {
     }
 
     public JwtAuthenticationResponse refreshToken(String refreshToken) {
-        if (!this.validateRefreshToken(refreshToken)) {
+        RefreshToken token = refreshTokenService.findTokenWithUser(refreshToken).orElseThrow(() ->
+                new InvalidCredentialsException("Refresh token not valid"));
+        if (!validateToken(refreshToken, getSecretKey(jwtRefreshSecret))) {
             throw new InvalidCredentialsException("Refresh token not valid");
         }
-        User user = refreshTokenService.findByToken(refreshToken).orElseThrow(() ->
-                new InvalidCredentialsException("Refresh token not valid")).getUser();
+        User user = token.getUser();
         return new JwtAuthenticationResponse(generateAccessToken(user), generateRefreshToken(user));
     }
 }

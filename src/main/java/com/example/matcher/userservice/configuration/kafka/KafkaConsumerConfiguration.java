@@ -31,6 +31,8 @@ public class KafkaConsumerConfiguration {
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        configProps.put("reconnect.backoff.ms", 50000); // Время ожидания перед переподключением
+        configProps.put("reconnect.backoff.max.ms", 100000); // Максимальное время между попытками
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
