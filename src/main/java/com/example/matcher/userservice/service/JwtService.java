@@ -7,24 +7,14 @@ import com.example.matcher.userservice.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
-import java.util.function.Function;
-
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 
 @Slf4j
@@ -52,14 +42,15 @@ public class JwtService {
     }
 
     public String generateRefreshToken(@NonNull User user) {
-
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
+
         refreshToken.setToken(Jwts.builder()
                 .setSubject(user.getEmail())
                 .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
                 .signWith(getSecretKey(jwtRefreshSecret))
                 .compact());
+
         refreshTokenService.saveToken(refreshToken);
         return refreshToken.getToken();
     }
@@ -100,7 +91,7 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public JwtAuthenticationResponse refreshToken(String refreshToken) {
+    public JwtAuthenticationResponse updateAccessAndRefreshToken(String refreshToken) {
         RefreshToken token = refreshTokenService.findTokenWithUser(refreshToken).orElseThrow(() ->
                 new InvalidCredentialsException("Refresh token not valid"));
         if (!validateToken(refreshToken, getSecretKey(jwtRefreshSecret))) {
@@ -109,4 +100,40 @@ public class JwtService {
         User user = token.getUser();
         return new JwtAuthenticationResponse(generateAccessToken(user), generateRefreshToken(user));
     }
+
+    public String extractAccessSubject(@NonNull String token) {
+        Claims claims = getClaims(token, getSecretKey(jwtAccessSecret));
+        return claims.getSubject();
+    }
+    public String extractRefreshSubject(@NonNull String token) {
+        Claims claims = getClaims(token, getSecretKey(jwtRefreshSecret));
+        return claims.getSubject();
+    }
+
+    public <T> T extractAccessClaim(@NonNull String token, @NonNull String claimKey, @NonNull Class<T> claimType) {
+        Claims claims = getClaims(token, getSecretKey(jwtAccessSecret));
+        return claims.get(claimKey, claimType); // Извлечение произвольного claim
+    }
+    public <T> T extractRefreshClaim(@NonNull String token, @NonNull String claimKey, @NonNull Class<T> claimType) {
+        Claims claims = getClaims(token, getSecretKey(jwtRefreshSecret));
+        return claims.get(claimKey, claimType); // Извлечение произвольного claim
+    }
+
+    private Claims getClaims(@NonNull String token, @NonNull Key secret) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secret)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public Claims extractAllClaims(@NonNull String token, boolean isAccessToken) {
+        String secret = isAccessToken ? jwtAccessSecret : jwtRefreshSecret;
+        return Jwts.parserBuilder()
+                .setSigningKey(getSecretKey(secret))
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
 }

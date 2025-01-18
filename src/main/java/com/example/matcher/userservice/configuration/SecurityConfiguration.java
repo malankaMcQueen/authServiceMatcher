@@ -78,6 +78,8 @@ package com.example.matcher.userservice.configuration;
 //    }
 //}
 
+import com.example.matcher.userservice.configuration.filter.JwtAuthenticationFilter;
+import com.example.matcher.userservice.service.JwtService;
 import com.example.matcher.userservice.service.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -90,6 +92,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import java.util.List;
@@ -100,6 +103,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
+
+    private final JwtService jwtService;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http
     , OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
@@ -119,12 +124,17 @@ public class SecurityConfiguration {
                         .requestMatchers("/login/**").permitAll()  // Разрешите доступ к страницам OAuth2
 //                        .anyRequest().authenticated())
                         .anyRequest().permitAll())
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2Login -> oauth2Login
                         .failureUrl("/login?error")
                         .successHandler(oAuth2AuthenticationSuccessHandler)
 //                        .defaultSuccessUrl("/UserService/auth/google", true)  // URL после успешного входа
                         );
         return http.build();
+    }
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService);
     }
 
 
