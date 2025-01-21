@@ -1,5 +1,6 @@
 package com.example.matcher.userservice.service;
 
+import com.example.matcher.userservice.aspect.AspectAnnotation;
 import com.example.matcher.userservice.configuration.SecurityConfiguration;
 import com.example.matcher.userservice.dto.UserDTO;
 import com.example.matcher.userservice.model.User;
@@ -22,12 +23,14 @@ import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
+
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
     private final UserRepository userRepository;
     private final UserService userService;
     private final OAuth2AuthorizedClientService authorizedClientService;
 
+    @AspectAnnotation
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
