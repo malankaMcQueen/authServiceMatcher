@@ -24,6 +24,13 @@ public class UserServiceApplication {
 		System.setProperty("spring.mail.password", EnvironmentLoader.get("SPRING_MAIL_PASSWORD"));
 		System.setProperty("telegram.bot.username", EnvironmentLoader.get("TELEGRAM_BOT_USERNAME"));
 		System.setProperty("telegram.bot.token", EnvironmentLoader.get("TELEGRAM_BOT_TOKEN"));
+
+		System.setProperty("spring.kafka.bootstrap-servers", EnvironmentLoader.get("SPRING_KAFKA_BOOTSTRAP_SERVERS", "http://localhost:9092"));
+		System.setProperty("eureka.client.service-url.defaultZone", EnvironmentLoader.get("EUREKA_DEFAULT_ZONE", "http://localhost:8761/eureka/"));
+		System.setProperty("spring.jpa.hibernate.ddl-auto", EnvironmentLoader.get("SPRING_JPA_HIBERNATE_DDL_AUTO", "update"));
+
+		System.setProperty("server.port", EnvironmentLoader.get("SERVER_PORT", "8081"));
+		System.setProperty("server.address", EnvironmentLoader.get("SERVER_ADDRESS", "0.0.0.0"));
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 
