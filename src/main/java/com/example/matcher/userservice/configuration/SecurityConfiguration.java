@@ -29,28 +29,34 @@ public class SecurityConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
     private final JwtService jwtService;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2AuthenticationSuccessHandler successHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http
+            , OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration corsConfig = new CorsConfiguration();
-                    corsConfig.setAllowedOriginPatterns(List.of("*"));
-                    corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfig.setAllowedHeaders(List.of("*"));
-                    corsConfig.setAllowCredentials(true);
-                    return corsConfig;
+                    var corsConfiguration = new CorsConfiguration();
+                    corsConfiguration.setAllowedOriginPatterns(List.of("*"));
+                    corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    corsConfiguration.setAllowedHeaders(List.of("*"));
+                    corsConfiguration.setAllowCredentials(true);
+                    return corsConfiguration;
                 }))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/UserService/auth/oauth2/**").permitAll() // Разрешить доступ к кастомным эндпоинтам
-                        .anyRequest().authenticated() // Остальные запросы требуют авторизации
-                )
+                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers("/UserService/auth/**").permitAll()
+                        .requestMatchers("/UserService/auth/refreshToken/getAll").authenticated()  // Разрешите доступ к страницам OAuth2
+                        .requestMatchers("/UserService/auth/oauth2/google").permitAll() // Разрешить доступ к Google OAuth2
+                        .anyRequest().authenticated())
+
                 .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(auth -> auth
-                                .baseUri("/UserService/auth/oauth2") // Установить базовый маршрут для кастомной авторизации
-                        )
-                        .successHandler(successHandler) // Обработчик после успешного входа
+                                .authorizationEndpoint(auth -> auth
+                                        .baseUri("/UserService/auth/oauth2") // Установить базовый маршрут для кастомной авторизации
+                                )
+                                .failureUrl("/login?error")
+                                .successHandler(oAuth2AuthenticationSuccessHandler)
                 )
+
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             // Вернуть 401 Unauthorized вместо редиректа на страницу логина
@@ -58,52 +64,13 @@ public class SecurityConfiguration {
                             response.setContentType("application/json");
                             response.getWriter().write("{\"error\": \"Unauthorized\"}");
                         })
-                );
+                )
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable);
         return http.build();
     }
-
-
-
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http
-//            , OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
-//        http
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .cors(cors -> cors.configurationSource(request -> {
-//                    var corsConfiguration = new CorsConfiguration();
-//                    corsConfiguration.setAllowedOriginPatterns(List.of("*"));
-//                    corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-//                    corsConfiguration.setAllowedHeaders(List.of("*"));
-//                    corsConfiguration.setAllowCredentials(true);
-//                    return corsConfiguration;
-//                }))
-//                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-//                        .requestMatchers("/UserService/auth/**").permitAll()
-//                        .requestMatchers("/login/**").permitAll()  // Разрешите доступ к страницам OAuth2
-//                        .requestMatchers("/UserService/auth/refreshToken/getAll").authenticated()  // Разрешите доступ к страницам OAuth2
-//                        .requestMatchers("/UserService/auth/oauth2/google").permitAll() // Разрешить доступ к Google OAuth2
-//                        .anyRequest().authenticated())
-//                .oauth2Login(oauth2 -> oauth2
-//                                .loginPage("/UserService/auth/oauth2/google") // Обработчик для Google OAuth2
-//                                .failureUrl("/login?error")
-//                                .successHandler(oAuth2AuthenticationSuccessHandler)
-////                        .defaultSuccessUrl("/UserService/auth/google", true)  // URL после успешного входа
-//                )
-//                .exceptionHandling(exception -> exception
-//                        .authenticationEntryPoint((request, response, authException) -> {
-//                            // Вернуть 401 Unauthorized вместо редиректа на страницу логина
-//                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                            response.setContentType("application/json");
-//                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
-//                        })
-//                )
-////                        .anyRequest().permitAll())
-////                .addFilterAfter(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-//
-//        .httpBasic(AbstractHttpConfigurer::disable)
-//                .formLogin(AbstractHttpConfigurer::disable);
-//        return http.build();
-//    }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -115,6 +82,7 @@ public class SecurityConfiguration {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }
 
 

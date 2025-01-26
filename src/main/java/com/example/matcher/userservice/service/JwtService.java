@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.Duration;
 import java.util.*;
 
 
@@ -32,10 +33,11 @@ public class JwtService {
     private RefreshTokenService refreshTokenService;
 
     public String generateAccessToken(@NonNull User user) {
+        long expirationTimeInMillis = Duration.ofMinutes(15).toMillis();
         return Jwts.builder()
                 .setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeInMillis))
                 .signWith(getSecretKey(jwtAccessSecret), SignatureAlgorithm.HS256)
                 .claim("UUID", user.getId())
                 .compact();
@@ -44,10 +46,11 @@ public class JwtService {
     public String generateRefreshToken(@NonNull User user) {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
+        long expirationTimeInMillis = Duration.ofHours(5).toMillis();
 
         refreshToken.setToken(Jwts.builder()
                 .setSubject(user.getEmail())
-                .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeInMillis))
                 .signWith(getSecretKey(jwtRefreshSecret))
                 .compact());
 
