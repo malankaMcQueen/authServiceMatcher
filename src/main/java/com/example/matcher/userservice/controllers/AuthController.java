@@ -106,5 +106,9 @@ public class AuthController {
         return new ResponseEntity<>(authenticationService.confirmationEmail(email, token), HttpStatus.OK);
     }
 
+    @GetMapping("/telegram/authorize")
+    public ResponseEntity<JwtAuthenticationResponse> telegramAuthLink(@RequestParam("token") String token){
+        return new ResponseEntity<>(authenticationService.confirmationTelegramAuthToken(token), HttpStatus.OK);
+    }
 
 }

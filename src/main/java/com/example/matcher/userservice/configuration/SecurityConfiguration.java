@@ -3,6 +3,7 @@ package com.example.matcher.userservice.configuration;
 import com.example.matcher.userservice.configuration.filter.JwtAuthenticationFilter;
 import com.example.matcher.userservice.service.JwtService;
 import com.example.matcher.userservice.service.OAuth2AuthenticationSuccessHandler;
+import com.example.matcher.userservice.service.telegramBot.TelegramBot;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -18,6 +19,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.util.List;
 
@@ -83,6 +87,12 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public TelegramBotsApi telegramBotsApi(TelegramBot telegramBot) throws TelegramApiException {
+        TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
+        botsApi.registerBot(telegramBot);
+        return botsApi;
+    }
 }
 
 

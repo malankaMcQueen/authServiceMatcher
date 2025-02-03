@@ -23,6 +23,9 @@ public class UserServiceApplication {
 		System.setProperty("spring.security.oauth2.client.registration.google.client-secret", dotenv.get("GOOGLE_CLIENT_SECRET"));
 		System.setProperty("spring.mail.username", dotenv.get("SPRING_MAIL_USERNAME"));
 		System.setProperty("spring.mail.password", dotenv.get("SPRING_MAIL_PASSWORD"));
+		System.setProperty("telegram.bot.username", dotenv.get("TELEGRAM_BOT_USERNAME"));
+		System.setProperty("telegram.bot.token", dotenv.get("TELEGRAM_BOT_TOKEN"));
+		System.setProperty("jwt.secret.auth.telegram", dotenv.get("JWT_SECRET_AUTH_TELEGRAM"));
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 

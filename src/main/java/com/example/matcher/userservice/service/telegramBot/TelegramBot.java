@@ -1,13 +1,17 @@
 package com.example.matcher.userservice.service.telegramBot;
 
+import com.example.matcher.userservice.service.AuthenticationService;
 import jakarta.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -16,7 +20,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Component
 @RequiredArgsConstructor
 public class TelegramBot extends TelegramLongPollingBot {
-
+    @Autowired
+    private final AuthenticationService authenticationService;
     private static final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
 
     @Value("${telegram.bot.username}")
@@ -55,7 +60,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void handleIncomingMessage(Message message) {
         String chatId = message.getChatId().toString();
         String text = message.getText();
-
         if ("/start".equals(text)) {
             handleStartCommand(message);
         } else {
@@ -64,13 +68,22 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void handleStartCommand(Message message) {
-        // Генерация ссылки для авторизации
-//        String token = userService.generateAuthorizationToken(chatId); // Создаем токен для привязки
-        String token = "Token"; // Создаем токен для привязки
-        logger.info("Message get {}", message);
-        String authUrl = "https://your-app-url.com/authorize?token=" + token;
+        Long userId = message.getFrom().getId();
 
-        sendMessage(message.getChatId().toString(), "Привет! Нажмите на ссылку для авторизации: " + authUrl);
+        String token = authenticationService.getTelegramAuthToken(userId);
+        String authUrl = "http://localhost:8080/UserService/auth/telegram/authorize?token=" + token;
+
+        String messageText = "Нажмите на ссылку для авторизации: " + authUrl;
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(message.getChatId());
+        sendMessage.setText(messageText);
+        sendMessage.setParseMode(ParseMode.MARKDOWN);
+
+        try {
+            execute(sendMessage);
+        } catch (TelegramApiException e) {
+            sendMessage(message.getChatId().toString(), "Some error");
+        }
     }
 
     private void sendMessage(String chatId, String text) {

@@ -22,11 +22,12 @@ public class UserService {
     private UserRepository userRepository;
 
     public User registerUser(UserDTO userDTO) {
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
+        if (userDTO.getEmail() != null && userRepository.existsByEmail(userDTO.getEmail())) {
             throw new UserAlreadyExistException("User with this email already exists");
         }
         User user = new User();
         user.setEmail(userDTO.getEmail());
+        user.setTelegramId(userDTO.getTelegramId());
         user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         user.setRole(Role.ROLE_USER);
         userRepository.save(user);
@@ -64,5 +65,9 @@ public class UserService {
     public User getUserById(UUID uuid) {
         return userRepository.findById(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException("User dont exist " + uuid));
+    }
+
+    public User getByTelegramId(Long userTelegramId) {
+        return userRepository.findByTelegramId(userTelegramId);
     }
 }

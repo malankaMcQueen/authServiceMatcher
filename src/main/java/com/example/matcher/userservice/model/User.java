@@ -21,8 +21,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String email;
+    @Column(unique = true)
+    private Long telegramId;
 
     @Column(nullable = false)
     private Timestamp createdAt;
