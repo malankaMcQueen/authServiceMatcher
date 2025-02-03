@@ -29,9 +29,22 @@ public class JwtService {
     @Value("${jwt.secret.refresh}")
     private String jwtRefreshSecret;
 
+    @Value("${jwt.secret.auth.telegram}")
+    private String jwtAuthTelegramSecret;
+
     @Autowired
     private RefreshTokenService refreshTokenService;
 
+    public String generateAuthTokenForTelegram(@NonNull User user) {
+        long expirationTimeInMillis = Duration.ofMinutes(35).toMillis();
+        return Jwts.builder()
+                .setSubject(user.getTelegramId().toString())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeInMillis))
+                .signWith(getSecretKey(jwtAuthTelegramSecret), SignatureAlgorithm.HS256)
+                .claim("UUID", user.getId())
+                .compact();
+    }
     public String generateAccessToken(@NonNull User user) {
         long expirationTimeInMillis = Duration.ofMinutes(15).toMillis();
         return Jwts.builder()
@@ -137,6 +150,15 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public boolean validateTelegramAuthToken(String token) {
+        return validateToken(token, getSecretKey(jwtAuthTelegramSecret));
+    }
+
+    public <T> T extractTelegramAuthTokenClaim(String token, String claimKey, Class<T> claimType) {
+        Claims claims = getClaims(token, getSecretKey(jwtAuthTelegramSecret));
+        return claims.get(claimKey, claimType); // Извлечение произвольного claim
     }
 
 }

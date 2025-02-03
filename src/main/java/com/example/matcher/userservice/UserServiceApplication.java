@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableAsync
 @EnableScheduling
-@EnableDiscoveryClient
+//@EnableDiscoveryClient
 public class UserServiceApplication {
 	public static void main(String[] args) {
 		System.setProperty("spring.datasource.url", EnvironmentLoader.get("SPRING_DATASOURCE_URL"));
@@ -24,7 +24,7 @@ public class UserServiceApplication {
 		System.setProperty("spring.mail.password", EnvironmentLoader.get("SPRING_MAIL_PASSWORD"));
 		System.setProperty("telegram.bot.username", EnvironmentLoader.get("TELEGRAM_BOT_USERNAME", "TEMP DATA"));
 		System.setProperty("telegram.bot.token", EnvironmentLoader.get("TELEGRAM_BOT_TOKEN", "TEMP DATA"));
-
+        System.setProperty("jwt.secret.auth.telegram", EnvironmentLoader.get("JWT_SECRET_AUTH_TELEGRAM"));
 		System.setProperty("spring.kafka.bootstrap-servers", EnvironmentLoader.get("SPRING_KAFKA_BOOTSTRAP_SERVERS", "http://localhost:9092"));
 		System.setProperty("eureka.client.service-url.defaultZone", EnvironmentLoader.get("EUREKA_DEFAULT_ZONE", "http://localhost:8761/eureka/"));
 		System.setProperty("spring.jpa.hibernate.ddl-auto", EnvironmentLoader.get("SPRING_JPA_HIBERNATE_DDL_AUTO", "update"));
